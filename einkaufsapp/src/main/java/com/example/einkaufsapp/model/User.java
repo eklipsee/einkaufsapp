@@ -20,6 +20,10 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String passwordHash;
 
+    // Temporäres Feld für Registrierung - wird nicht persistiert
+    @Transient
+    private String password;
+
     // === UserDetails interface ===
 
     @Override
@@ -46,12 +50,12 @@ public class User implements UserDetails {
 
     // === Getter/Setter ===
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getUsername() {
@@ -60,5 +64,19 @@ public class User implements UserDetails {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    // Für Registrierung - temporäres Passwort
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    // Für Registrierung - temporäres Passwort abrufen
+    public String getPasswordForRegistration() {
+        return password;
     }
 }

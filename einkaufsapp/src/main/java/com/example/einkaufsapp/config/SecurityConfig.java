@@ -46,24 +46,43 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable())  // Lambda statt direkter Methode
-        .cors(cors -> {})
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/users/register").permitAll()
-            .anyRequest().authenticated()
-        )
-        .httpBasic(httpBasic -> {}); // leere Lambda für httpBasic
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginProcessingUrl("/api/users/login")
+                .successHandler((request, response, authentication) -> {
+                    response.setStatus(200);
+                    response.getWriter().write("{\"message\":\"Login successful\"}");
+                })
+                .failureHandler((request, response, exception) -> {
+                    response.setStatus(401);
+                    response.getWriter().write("{\"message\":\"Login failed\"}");
+                })
+            )
+            .logout(logout -> logout
+                .logoutUrl("/api/users/logout")
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setStatus(200);
+                    response.getWriter().write("{\"message\":\"Logout successful\"}");
+                })
+            );
+        
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedOrigins(List.of("http://localhost:3000"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true); // <- wichtig für Auth mit Cookies
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

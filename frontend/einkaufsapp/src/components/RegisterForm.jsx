@@ -1,29 +1,53 @@
 import { useState } from "react";
 import axios from "axios";
 
-function RegisterForm() {
+function RegisterForm({ onRegister }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:8080/api/users/register", {
+      // WICHTIG: Relative URL verwenden, damit der Proxy greift
+      const response = await axios.post("/api/users/register", {
         username,
         password,
       });
-      alert("Registrierung erfolgreich");
-    } catch (err) {
-      alert("Fehler bei Registrierung");
+      setMessage("Erfolgreich registriert. Du kannst dich jetzt einloggen.");
+      // Nach 2 Sekunden zurück zum Login
+      setTimeout(() => {
+        if (onRegister) onRegister();
+      }, 2000);
+    } catch (error) {
+      console.error("Registrierung Fehler:", error);
+      setMessage("Fehler bei der Registrierung. Benutzername evtl. vergeben.");
     }
   };
 
   return (
-    <form onSubmit={handleRegister}>
-      <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" />
-      <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Passwort" />
-      <button type="submit">Registrieren</button>
-    </form>
+    <div>
+      <h2>Registrieren</h2>
+      <form onSubmit={handleRegister}>
+        <input
+          type="text"
+          placeholder="Benutzername"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Passwort"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit">Registrieren</button>
+      </form>
+      <button onClick={onRegister}>Zurück</button>
+      {message && <p>{message}</p>}
+    </div>
   );
 }
 
