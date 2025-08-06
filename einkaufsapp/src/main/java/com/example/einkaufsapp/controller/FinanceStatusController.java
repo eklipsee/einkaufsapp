@@ -82,7 +82,21 @@ public class FinanceStatusController {
             String partnerName = fs.getUserA().equals(currentUser)
                     ? fs.getUserB().getUsername()
                     : fs.getUserA().getUsername();
-            return new FinanceStatusDTO(fs.getId(), partnerName, fs.getBalance());
+            
+            // Bestimme wer der Gläubiger ist (wer mehr bezahlt hat)
+            String creditorName;
+            if (fs.getBalance() > 0) {
+                // UserA hat mehr bezahlt
+                creditorName = fs.getUserA().getUsername();
+            } else if (fs.getBalance() < 0) {
+                // UserB hat mehr bezahlt
+                creditorName = fs.getUserB().getUsername();
+            } else {
+                // Ausgeglichen
+                creditorName = "Ausgeglichen";
+            }
+            
+            return new FinanceStatusDTO(fs.getId(), partnerName, fs.getBalance(), creditorName);
         }).toList();
 
         return ResponseEntity.ok(dtoList);
