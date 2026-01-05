@@ -48,12 +48,12 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // weil frondend und backen auf unterschiedlichen ports laufen
+            .authorizeHttpRequests(auth -> auth     //legt fest welche endpunkte eine auth. benötigen
+                .requestMatchers("/api/users/register", "/api/users/login").permitAll()  
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form
+            .formLogin(form -> form   // eigene json antwort auf login
                 .loginProcessingUrl("/api/users/login")
                 .successHandler((request, response, authentication) -> {
                     response.setStatus(200);
@@ -76,12 +76,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() {                          // Cors details werden configuriert
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedOrigins(List.of("http://localhost:3000"));                 // wer darf aufs backen zugreifen
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));  // alle erlaubten http methoden
+        config.setAllowedHeaders(List.of("*"));                                     
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

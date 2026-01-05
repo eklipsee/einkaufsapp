@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: einkaufsapp-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootUser
+      MYSQL_DATABASE: einkaufsapp
+      MYSQL_USER: einkaufsapp_user
+      MYSQL_PASSWORD: backendUser
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build: ./einkaufsapp
+    container_name: einkaufsapp-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/einkaufsapp?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: einkaufsapp_user
+      SPRING_DATASOURCE_PASSWORD: backendUser
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend/einkaufsapp
+    container_name: einkaufsapp-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
